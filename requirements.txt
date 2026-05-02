@@ -1,8 +1,15 @@
+# Core AI & Deep Learning
 torch
 torchvision
-opencv-python
+
+# Computer Vision (Cloud-friendly version)
+opencv-python-headless
+
+# UI & Visualization
 streamlit
 Pillow
 numpy
 plotly
 pandas
+streamlit-option-menu
+matplotlib
