@@ -1,5 +1,3 @@
-# app.py
-
 import streamlit as st
 import torch
 import torch.nn as nn
@@ -12,8 +10,17 @@ import os
 import time
 import yt_dlp
 import requests
-from streamlit_option_menu import option_menu
+import pandas as pd
 import matplotlib.pyplot as plt
+from streamlit_option_menu import option_menu
+
+# ---------------- PAGE CONFIG ----------------
+
+st.set_page_config(
+    page_title="Deepfake Detector",
+    layout="wide",
+    page_icon="🎭"
+)
 
 # ---------------- MODEL ----------------
 
@@ -53,17 +60,11 @@ class DeepfakeDetector(nn.Module):
             cv2.COLOR_BGR2RGB
         )
 
-        img = cv2.resize(
-            img,
-            (224, 224)
-        )
+        img = cv2.resize(img, (224, 224))
 
         img = img / 255.0
 
-        img = np.transpose(
-            img,
-            (2, 0, 1)
-        )
+        img = np.transpose(img, (2, 0, 1))
 
         img = torch.tensor(
             img,
@@ -74,10 +75,7 @@ class DeepfakeDetector(nn.Module):
 
             logits = self.forward(img)
 
-            probs = F.softmax(
-                logits,
-                dim=1
-            )
+            probs = F.softmax(logits, dim=1)
 
             conf, class_idx = torch.max(
                 probs,
@@ -86,14 +84,6 @@ class DeepfakeDetector(nn.Module):
 
             return class_idx.item(), conf.item()
 
-# ---------------- PAGE CONFIG ----------------
-
-st.set_page_config(
-    page_title="Deepfake Detector",
-    layout="wide",
-    page_icon="🎭"
-)
-
 # ---------------- CUSTOM CSS ----------------
 
 st.markdown("""
@@ -101,7 +91,14 @@ st.markdown("""
 
 body, .stApp {
     background-color: #121212;
-    color: #f5f5f5;
+    color: white;
+}
+
+.big-title {
+    font-size: 50px;
+    color: #ffcc00;
+    text-align: center;
+    font-weight: bold;
 }
 
 .stButton>button {
@@ -109,20 +106,13 @@ body, .stApp {
     color: white;
     border-radius: 10px;
     border: none;
-    padding: 10px 20px;
-    font-weight: bold;
+    height: 3em;
+    width: 100%;
+    font-size: 18px;
 }
 
 .stButton>button:hover {
     background-color: #ff3333;
-}
-
-.big-title {
-    font-size: 55px;
-    font-weight: bold;
-    color: #ffcc00;
-    text-align: center;
-    margin-bottom: 20px;
 }
 
 </style>
@@ -151,25 +141,19 @@ if selected == "🏠 Home":
 
     st.markdown("""
     <div class='big-title'>
-    🎬 Welcome to AI Deepfake Detector
+    🎬 AI Deepfake Detector
     </div>
     """, unsafe_allow_html=True)
 
     st.info(
-        "Upload video OR paste video link to detect deepfake videos."
+        "Upload a video OR paste a video link to detect fake videos."
     )
 
 # ---------------- DETECTION TOOL ----------------
 
 elif selected == "🕵️ Detection Tool":
 
-    st.markdown("""
-    <h2 style='text-align:center;color:#00ffcc;'>
-    Upload OR Paste Video Link
-    </h2>
-    """, unsafe_allow_html=True)
-
-    # ---------------- DEVICE ----------------
+    st.title("🕵️ Deepfake Detection")
 
     device = (
         "cuda"
@@ -186,22 +170,16 @@ elif selected == "🕵️ Detection Tool":
 
         detector = DeepfakeDetector()
 
-        with st.spinner(
-            "🔄 Loading AI Model..."
-        ):
-
-            time.sleep(2)
-
-            detector.load_model(
-                "checkpoints/model_best.pth",
-                device=device
-            )
+        detector.load_model(
+            "checkpoints/model_best.pth",
+            device=device
+        )
 
         return detector
 
     model = load_model()
 
-    # ---------------- VIDEO UPLOAD ----------------
+    # ---------------- FILE UPLOAD ----------------
 
     st.subheader("📤 Upload Video")
 
@@ -212,21 +190,19 @@ elif selected == "🕵️ Detection Tool":
 
     st.markdown("---")
 
-    # ---------------- VIDEO URL ----------------
+    # ---------------- URL INPUT ----------------
 
     st.subheader("🔗 Paste Video Link")
 
     video_url = st.text_input(
-        "Paste YouTube or MP4 URL"
+        "Paste YouTube or MP4 video URL"
     )
 
     download_btn = st.button(
-        "📥 Download & Analyze"
+        "📥 Download & Analyze Video"
     )
 
     st.markdown("---")
-
-    # ---------------- THRESHOLD ----------------
 
     confidence_threshold = st.slider(
         "Confidence Threshold",
@@ -235,7 +211,7 @@ elif selected == "🕵️ Detection Tool":
         0.5
     )
 
-    # ---------------- VIDEO PATH ----------------
+    # ---------------- VIDEO SOURCE ----------------
 
     video_path = None
 
@@ -247,7 +223,7 @@ elif selected == "🕵️ Detection Tool":
 
         try:
 
-            # YouTube
+            # YouTube Video
 
             if (
                 "youtube.com" in video_url
@@ -268,13 +244,11 @@ elif selected == "🕵️ Detection Tool":
 
                 video_path = "downloaded_video.mp4"
 
-            # Direct MP4 Link
+            # Direct MP4 URL
 
             else:
 
-                response = requests.get(
-                    video_url
-                )
+                response = requests.get(video_url)
 
                 with open(
                     "downloaded_video.mp4",
@@ -285,17 +259,13 @@ elif selected == "🕵️ Detection Tool":
 
                 video_path = "downloaded_video.mp4"
 
-            st.success(
-                "✅ Video Downloaded"
-            )
+            st.success("✅ Video Downloaded")
 
         except Exception as e:
 
-            st.error(
-                f"❌ Error: {e}"
-            )
+            st.error(f"❌ Download Error: {e}")
 
-    # -------- UPLOAD VIDEO --------
+    # -------- UPLOADED VIDEO --------
 
     elif uploaded_file is not None:
 
@@ -303,60 +273,35 @@ elif selected == "🕵️ Detection Tool":
             delete=False
         )
 
-        tfile.write(
-            uploaded_file.read()
-        )
+        tfile.write(uploaded_file.read())
 
         video_path = tfile.name
 
-    # ---------------- ANALYSIS ----------------
+    # ---------------- START ANALYSIS ----------------
 
     if video_path is not None:
 
         st.video(video_path)
 
-        output_dir = "outputs"
-
-        os.makedirs(
-            output_dir,
-            exist_ok=True
-        )
-
-        cap = cv2.VideoCapture(
-            video_path
-        )
+        cap = cv2.VideoCapture(video_path)
 
         if not cap.isOpened():
 
-            st.error(
-                "❌ Error opening video."
-            )
+            st.error("❌ Error opening video")
 
             st.stop()
 
-        fps = cap.get(
-            cv2.CAP_PROP_FPS
-        ) or 25
+        fps = cap.get(cv2.CAP_PROP_FPS)
 
         frame_count = int(
-            cap.get(
-                cv2.CAP_PROP_FRAME_COUNT
-            )
+            cap.get(cv2.CAP_PROP_FRAME_COUNT)
         )
 
         if frame_count == 0:
 
-            st.error(
-                "❌ Video has 0 frames."
-            )
+            st.error("❌ No frames found")
 
             st.stop()
-
-        frames = []
-
-        labels = []
-
-        confidences = []
 
         stframe = st.empty()
 
@@ -364,7 +309,13 @@ elif selected == "🕵️ Detection Tool":
 
         chart_placeholder = st.empty()
 
-        # ---------------- FRAME LOOP ----------------
+        labels = []
+
+        confidences = []
+
+        frames = []
+
+        # ---------------- FRAME PROCESSING ----------------
 
         for i in range(frame_count):
 
@@ -390,13 +341,11 @@ elif selected == "🕵️ Detection Tool":
                 else "Uncertain"
             )
 
-            labels.append(
-                display_label
-            )
+            labels.append(display_label)
 
             confidences.append(conf)
 
-            # -------- DRAW LABEL --------
+            # ---------------- DRAW LABEL ----------------
 
             frame_disp = frame.copy()
 
@@ -409,7 +358,7 @@ elif selected == "🕵️ Detection Tool":
             cv2.putText(
                 frame_disp,
                 f"{display_label}: {conf*100:.2f}%",
-                (10, 30),
+                (20, 40),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1,
                 color,
@@ -429,17 +378,13 @@ elif selected == "🕵️ Detection Tool":
                 (i + 1) / frame_count
             )
 
-            # -------- LIVE PIE CHART --------
+            # ---------------- LIVE PIE CHART ----------------
 
             if i % 5 == 0:
 
-                real_count = labels.count(
-                    "Real"
-                )
+                real_count = labels.count("Real")
 
-                fake_count = labels.count(
-                    "Fake"
-                )
+                fake_count = labels.count("Fake")
 
                 uncertain_count = labels.count(
                     "Uncertain"
@@ -462,12 +407,10 @@ elif selected == "🕵️ Detection Tool":
                 )
 
                 ax.set_title(
-                    "Frame Analysis"
+                    "Frame-wise Detection"
                 )
 
-                chart_placeholder.pyplot(
-                    fig
-                )
+                chart_placeholder.pyplot(fig)
 
         cap.release()
 
@@ -475,13 +418,9 @@ elif selected == "🕵️ Detection Tool":
 
         total = len(labels)
 
-        real_count = labels.count(
-            "Real"
-        )
+        real_count = labels.count("Real")
 
-        fake_count = labels.count(
-            "Fake"
-        )
+        fake_count = labels.count("Fake")
 
         uncertain_count = labels.count(
             "Uncertain"
@@ -491,9 +430,7 @@ elif selected == "🕵️ Detection Tool":
             np.mean(confidences) * 100
         )
 
-        st.markdown(
-            "## ✅ Analysis Complete"
-        )
+        st.markdown("## ✅ Final Results")
 
         st.success(
             f"🎞️ Total Frames: {total}"
@@ -512,17 +449,25 @@ elif selected == "🕵️ Detection Tool":
         )
 
         st.info(
-            f"📊 Average Confidence: {avg_conf:.2f}%"
+            f"📊 Average Confidence: "
+            f"{avg_conf:.2f}%"
         )
 
         # ---------------- SAVE VIDEO ----------------
+
+        output_dir = "outputs"
+
+        os.makedirs(
+            output_dir,
+            exist_ok=True
+        )
 
         output_path = os.path.join(
             output_dir,
             f"annotated_{int(time.time())}.mp4"
         )
 
-        if frames:
+        if len(frames) > 0:
 
             height, width, _ = frames[0].shape
 
@@ -534,17 +479,13 @@ elif selected == "🕵️ Detection Tool":
             )
 
             for f in frames:
-
                 out.write(f)
 
             out.release()
 
             st.video(output_path)
 
-            with open(
-                output_path,
-                "rb"
-            ) as file:
+            with open(output_path, "rb") as file:
 
                 st.download_button(
                     label="📥 Download Annotated Video",
@@ -553,34 +494,30 @@ elif selected == "🕵️ Detection Tool":
                     mime="video/mp4"
                 )
 
-            st.success(
-                f"✅ Annotated Video Saved"
-            )
-
 # ---------------- FEATURES ----------------
 
 elif selected == "ℹ️ Features":
 
+    st.title("ℹ️ Features")
+
     st.write("""
     ✅ Upload Video Detection
 
-    ✅ YouTube Video Detection
+    ✅ YouTube Link Detection
 
-    ✅ MP4 Link Detection
+    ✅ MP4 URL Detection
 
-    ✅ Frame-wise AI Detection
+    ✅ Frame-wise AI Analysis
 
     ✅ Live Pie Chart
 
-    ✅ Annotated Video Output
+    ✅ Download Annotated Video
 
-    ✅ Download Result Video
+    ✅ Fake vs Real Statistics
 
     ✅ GPU Support
 
-    ✅ Dark Professional UI
+    ✅ Dark Horror UI
     """)
 
-    st.info(
-        "Made by Gaurav Sharma 🚀"
-    )
+    st.info("Made by Gaurav Sharma 🚀")
