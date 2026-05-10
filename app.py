@@ -272,6 +272,6 @@ elif selected == "ℹ️ Features":
     - Annotated video output with labels
     - Live Pie Chart update while processing
     - Evil Eyes Horror UI effect
-    - Dark Theme Professional UI
+    - Dark Theme Professional UI GS
     """)
     st.info("Made by Gaurav Sharma & Team") 
