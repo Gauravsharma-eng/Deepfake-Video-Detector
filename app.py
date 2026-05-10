@@ -138,7 +138,7 @@ elif selected == "🕵️ Detection Tool":
             detector.load_model("checkpoints/model_best.pth", device=device)
         return detector
 
-   model = load_model()
+    model = load_model()
 
 # ---------------- VIDEO INPUT OPTION ----------------
 
@@ -273,6 +273,6 @@ elif selected == "ℹ️ Features":
     - Annotated video output with labels
     - Live Pie Chart update while processing
     - Evil Eyes Horror UI effect
-    - Dark Theme Professional UI 
+    - Dark Theme Professional UI-gs 
     """)
     st.info("Made by Gaurav Sharma & Team") 
