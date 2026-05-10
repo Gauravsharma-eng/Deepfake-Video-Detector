@@ -187,13 +187,11 @@ elif selected == "🕵️ Detection Tool":
             st.success("✅ Analysis Complete")
 
 elif selected == "ℹ️ Features":
+    st.markdown("### 🚀 Project Features")
     st.write("""
-    Features:
-    - Upload any MP4/AVI/MOV video
-    - Frame-wise Real vs Fake detection
-    - Annotated video output with labels
-    - Live Pie Chart update while processing
-    - Evil Eyes Horror UI effect
-    - Dark Theme Professional UI 
+    - **Real-time Detection:** Frame-by-frame analysis using ResNet50.
+    - **Visual Insights:** Live distribution charts and annotated video playback.
+    - **Flexible Input:** Supports local uploads and URL processing.
+    - **Hardware Optimized:** Automatically uses GPU (CUDA) if available.
     """)
-    st.info("Made by Gaurav Sharma & Team")  
+    st.info("Developed by Gaurav Sharma & Team")
